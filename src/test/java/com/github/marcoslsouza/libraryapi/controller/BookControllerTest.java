@@ -16,8 +16,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.marcoslsouza.libraryapi.dto.BookDTO;
 
 // Cria um mini contexto de dependencias para rodar o teste
 @ExtendWith(SpringExtension.class)
@@ -39,8 +39,11 @@ public class BookControllerTest {
 	@DisplayName("Deve criar um livro com sucesso")
 	public void createBookTest() throws Exception {
 		
+		// Passa os valores para o controller
+		BookDTO dto = BookDTO.builder().author("Artur").title("As aventuras").isbn("001").build();
+		
 		// Recebe um objeto e transforma em um json
-		String json = new ObjectMapper().writeValueAsString(null);
+		String json = new ObjectMapper().writeValueAsString(dto);
 		
 		// Definir uma requisicao
 		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
@@ -49,15 +52,16 @@ public class BookControllerTest {
 			.accept(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
 			.content(json);
 		
+		// Recebe os valores do controller
 		// Obs: Fazemos uma requisicao e recebemos uma resposta com o status 201 (created).
 		// E assim recebemos uma resposta em JSON, onde fazemos uma verificacao se o JSON de 
 		// resposta retorna as informacoes citadas Ex. andExpect(MockMvcResultMatchers.jsonPath("id").isNotEmpty())
 		mvc.perform(request)
 			.andExpect(MockMvcResultMatchers.status().isCreated())
 			.andExpect(MockMvcResultMatchers.jsonPath("id").isNotEmpty())
-			.andExpect(jsonPath("title").value("Meu Livro"))
-			.andExpect(jsonPath("author").value("Autor"))
-			.andExpect(jsonPath("isbn").value("1213212"));
+			.andExpect(jsonPath("title").value(dto.getTitle()))
+			.andExpect(jsonPath("author").value(dto.getAuthor()))
+			.andExpect(jsonPath("isbn").value(dto.getIsbn()));
 			
 	}
 	

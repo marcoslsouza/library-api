@@ -17,11 +17,11 @@ public class BookController {
 	@PostMapping
 	public ResponseEntity<BookDTO> create(UriComponentsBuilder uriBuilder) {
 		
-		BookDTO dto = new BookDTO();
-		dto.setAuthor("Autor");
-		dto.setTitle("Meu Livro");
-		dto.setIsbn("1213212");
-		dto.setId(11L);
+		BookDTO dto = BookDTO.builder().author("Artur").title("As aventuras").isbn("001").id(11L).build();
+		//dto.setAuthor("Autor");
+		//dto.setTitle("Meu Livro");
+		//dto.setIsbn("1213212");
+		//dto.setId(11L);
 		
 		// Retorna o endereco do recurso e um json de dto e status 201 (created)
 		URI uri = uriBuilder.path("/api/books/{id}").buildAndExpand(dto.getId()).toUri();
