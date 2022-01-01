@@ -5,9 +5,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -18,6 +21,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.marcoslsouza.libraryapi.dto.BookDTO;
+import com.github.marcoslsouza.libraryapi.entity.Book;
+import com.github.marcoslsouza.libraryapi.service.BookService;
 
 // Cria um mini contexto de dependencias para rodar o teste
 @ExtendWith(SpringExtension.class)
@@ -35,12 +40,20 @@ public class BookControllerTest {
 	@Autowired
 	MockMvc mvc;
 	
+	// Cria uma instancia mocada
+	@MockBean
+	BookService service;
+	
 	@Test
 	@DisplayName("Deve criar um livro com sucesso")
 	public void createBookTest() throws Exception {
 		
 		// Passa os valores para o controller
 		BookDTO dto = BookDTO.builder().author("Artur").title("As aventuras").isbn("001").build();
+		
+		// Independente do livro que for salvo, sera retornado "saveBook"
+		Book saveBook = Book.builder().id(10L).author("Artur").title("As aventuras").isbn("001").build();
+		BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(saveBook);
 		
 		// Recebe um objeto e transforma em um json
 		String json = new ObjectMapper().writeValueAsString(dto);
