@@ -18,7 +18,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.github.marcoslsouza.libraryapi.dto.BookDTO;
 import com.github.marcoslsouza.libraryapi.entity.Book;
-import com.github.marcoslsouza.libraryapi.exceptions.APIErrors;
+import com.github.marcoslsouza.libraryapi.exception.BusinessException;
+import com.github.marcoslsouza.libraryapi.api.exceptions.APIErrors;
 import com.github.marcoslsouza.libraryapi.service.BookService;
 
 @RestController
@@ -51,6 +52,7 @@ public class BookController {
 		return ResponseEntity.created(uri).body(dto);
 	}
 	
+	// Erro de validacao
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<APIErrors> handleValidationExceptions(MethodArgumentNotValidException ex) {
 		
@@ -58,5 +60,10 @@ public class BookController {
 		BindingResult bindingResult = ex.getBindingResult();
 		
 		return ResponseEntity.badRequest().body(new APIErrors(bindingResult));
+	}
+	
+	@ExceptionHandler(BusinessException.class)
+	public ResponseEntity<APIErrors> handleBusinessExceptions(BusinessException ex) {
+		return ResponseEntity.badRequest().body(new APIErrors(ex));
 	}
 }

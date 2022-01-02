@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.marcoslsouza.libraryapi.dto.BookDTO;
 import com.github.marcoslsouza.libraryapi.entity.Book;
+import com.github.marcoslsouza.libraryapi.exception.BusinessException;
 import com.github.marcoslsouza.libraryapi.service.BookService;
 
 // Cria um mini contexto de dependencias para rodar o teste
@@ -50,7 +51,7 @@ public class BookControllerTest {
 	public void createBookTest() throws Exception {
 		
 		// Passa os valores para o controller
-		BookDTO dto = BookDTO.builder().author("Artur").title("As aventuras").isbn("001").build();
+		BookDTO dto = this.createNewBook();
 		
 		// Independente do livro que for salvo, sera retornado "saveBook"
 		Book saveBook = Book.builder().id(10L).author("Artur").title("As aventuras").isbn("001").build();
@@ -79,6 +80,7 @@ public class BookControllerTest {
 			
 	}
 	
+	// Validacao de integridade
 	@Test
 	@DisplayName("Deve lancar erro de validacao quando nao houver dados suficientes para criacao do livro")
 	public void createInvalidBookTest() throws Exception {
@@ -96,5 +98,38 @@ public class BookControllerTest {
 		mvc.perform(request)
 			.andExpect(MockMvcResultMatchers.status().isBadRequest())
 			.andExpect(jsonPath("errors", Matchers.hasSize(3)));
+	}
+	
+	// Validacao de regra de negocio
+	@Test
+	@DisplayName("Deve lancar erro ao tentar cadastrar um livro com isbn já utilizado por outro.")
+	public void createBookWithDuplicatedIsbn() throws Exception {
+		
+		BookDTO dto = this.createNewBook();
+		
+		// Cria um json com "BookDTO()" null
+		String json = new ObjectMapper().writeValueAsString(dto);
+		
+		// Simular que o servico enviou a mensagem de erro
+		String mensagemErro = "Isbn já cadastrado.";
+		BDDMockito.given(this.service.save(Mockito.any(Book.class)))
+				.willThrow(new BusinessException(mensagemErro));
+		
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.post(BOOK_API)
+				.contentType(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.content(json);
+		
+		mvc.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isBadRequest())
+			// Tenha apenas uma mensagem de erro
+			.andExpect(jsonPath("errors", Matchers.hasSize(1)))
+			// Na posicao "0" do array errors tera o valor da mensagem "Isbn já cadastrado."
+			.andExpect(jsonPath("errors[0]").value(mensagemErro));
+	}
+	
+	private BookDTO createNewBook() {
+		return BookDTO.builder().author("Artur").title("As aventuras").isbn("001").build();
 	}
 }

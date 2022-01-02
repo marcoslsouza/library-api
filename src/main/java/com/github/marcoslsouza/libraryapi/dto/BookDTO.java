@@ -4,12 +4,10 @@ import javax.validation.constraints.NotEmpty;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 // Para criar um build para as instancias. Ex. Requerido na classe de teste
 @Builder
 @NoArgsConstructor
