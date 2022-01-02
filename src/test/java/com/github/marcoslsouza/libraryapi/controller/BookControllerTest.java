@@ -2,6 +2,7 @@ package com.github.marcoslsouza.libraryapi.controller;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.marcoslsouza.libraryapi.dto.BookDTO;
 import com.github.marcoslsouza.libraryapi.entity.Book;
@@ -80,7 +82,20 @@ public class BookControllerTest {
 	
 	@Test
 	@DisplayName("Deve lancar erro de validacao quando nao houver dados suficientes para criacao do livro")
-	public void createInvalidBookTest() {
+	public void createInvalidBookTest() throws Exception {
 		
+		// Cria um json com "BookDTO()" null
+		String json = new ObjectMapper().writeValueAsString(new BookDTO());
+		
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.post(BOOK_API)
+				.contentType(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.content(json);
+		
+		// No Json teremos a propriedade "errors" com 3 mensagens de erro "Matchers.hasSize(3)" para title author e isbn
+		mvc.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isBadRequest())
+			.andExpect(jsonPath("errors", Matchers.hasSize(3)));
 	}
 }
