@@ -1,5 +1,7 @@
 package com.github.marcoslsouza.libraryapi.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,11 @@ public class BookServiceImpl implements BookService {
 			throw new BusinessException("Isbn já cadastrado.");
 		}
 		return repository.save(book);
+	}
+
+	@Override
+	public Optional<Book> getById(Long id) {
+		return this.repository.findById(id);
 	}
 
 }

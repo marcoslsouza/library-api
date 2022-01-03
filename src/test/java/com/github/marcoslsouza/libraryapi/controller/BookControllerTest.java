@@ -2,6 +2,8 @@ package com.github.marcoslsouza.libraryapi.controller;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+import java.util.Optional;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -127,6 +129,52 @@ public class BookControllerTest {
 			.andExpect(jsonPath("errors", Matchers.hasSize(1)))
 			// Na posicao "0" do array errors tera o valor da mensagem "Isbn já cadastrado."
 			.andExpect(jsonPath("errors[0]").value(mensagemErro));
+	}
+	
+	@Test
+	@DisplayName("Deve obter informacoes de um livro")
+	public void getBookDetailsTest() throws Exception {
+		
+		// cenario (given)
+		Long id = 1L;
+		
+		Book book = Book.builder()
+				.id(id)
+				.title(this.createNewBook().getTitle())
+				.author(this.createNewBook().getAuthor())
+				.isbn(this.createNewBook().getIsbn())
+				.build();
+		
+		BDDMockito.given(service.getById(id)).willReturn(Optional.of(book));
+		
+		// execucao (when)
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+			.get(BOOK_API.concat("/"+id))
+			.accept(MediaType.APPLICATION_JSON);
+		
+		mvc
+			.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(MockMvcResultMatchers.jsonPath("id").value(id))
+			.andExpect(jsonPath("title").value(this.createNewBook().getTitle()))
+			.andExpect(jsonPath("author").value(this.createNewBook().getAuthor()))
+			.andExpect(jsonPath("isbn").value(this.createNewBook().getIsbn()));
+	}
+	
+	@Test
+	@DisplayName("Deve retornar resource not found quando o livro procurado nao existir.")
+	public void bookNotFoundTest() throws Exception {
+		
+		// Tanto faz o id que for passado, ele sempre retorna nao encontrado (empty)
+		BDDMockito.given(service.getById(Mockito.anyLong())).willReturn(Optional.empty());
+		
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.get(BOOK_API.concat("/"+1))
+				.accept(MediaType.APPLICATION_JSON);
+		
+		mvc
+		.perform(request)
+		.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
 	
 	private BookDTO createNewBook() {
