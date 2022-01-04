@@ -3,6 +3,7 @@ package com.github.marcoslsouza.libraryapi.controller;
 import java.net.URI;
 import java.util.Optional;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.github.marcoslsouza.libraryapi.api.exceptions.APIErrors;
 import com.github.marcoslsouza.libraryapi.dto.BookDTO;
 import com.github.marcoslsouza.libraryapi.entity.Book;
 import com.github.marcoslsouza.libraryapi.exception.BusinessException;
-import com.github.marcoslsouza.libraryapi.api.exceptions.APIErrors;
 import com.github.marcoslsouza.libraryapi.service.BookService;
 
 @RestController
@@ -43,6 +45,7 @@ public class BookController {
 	}
 
 	@PostMapping
+	@Transactional
 	public ResponseEntity<BookDTO> create(@RequestBody @Valid BookDTO dto, UriComponentsBuilder uriBuilder) {
 		
 		// Passando de dto para book
@@ -64,6 +67,17 @@ public class BookController {
 		
 		return book.map(b -> this.mapper.map(b, BookDTO.class))
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	}
+	
+	@DeleteMapping("{id}")
+	@Transactional
+	public ResponseEntity<?> delete(@PathVariable Long id) {
+		
+		return this.service.getById(id)
+				.map(book -> {
+					this.service.delete(book);
+					return ResponseEntity.noContent().build();
+				}).orElse( ResponseEntity.notFound().build() );
 	}
 	
 	// Erro de validacao
