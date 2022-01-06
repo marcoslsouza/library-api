@@ -207,7 +207,64 @@ public class BookControllerTest {
 		.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
 	
+	@Test
+	@DisplayName("Deve atualizar um livro")
+	public void updateBookTest() throws Exception {
+		
+		Long id = 11L;
+		
+		// JSON com os dados atualizados
+		String json = new ObjectMapper().writeValueAsString(this.createNewBook());
+		
+		// Busca o livro na base
+		Book updatingBook = Book.builder().id(id).title("som title").author("some author").isbn("321").build();
+		BDDMockito.given(service.getById(Mockito.anyLong())).willReturn(Optional.of(updatingBook));
+		
+		// Atualizando dados (mesmos dados de this.createNewBook())
+		Book updatedBook = Book.builder().id(id).author("Artur").title("As aventuras").isbn("321").build();
+		BDDMockito.given(service.update(updatingBook)).willReturn(updatedBook);
+		
+		// Envia o json atualizado
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.put(BOOK_API.concat("/"+id))
+				.contentType(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.content(json);
+		
+		// Retorno sao os dados de updatedBook
+		mvc
+			.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(MockMvcResultMatchers.jsonPath("id").value(id))
+			.andExpect(jsonPath("title").value(updatedBook.getTitle()))
+			.andExpect(jsonPath("author").value(updatedBook.getAuthor()))
+			.andExpect(jsonPath("isbn").value(updatedBook.getIsbn()));
+	}
+	
+	@Test
+	@DisplayName("Deve lancar 404 ao tentar atualizar um livro e nao encontra o livro")
+	public void updateBookNotFoundTest() throws Exception {
+
+		// JSON com os dados atualizados
+		String json = new ObjectMapper().writeValueAsString(this.createNewBook());
+		
+		// Busca o livro na base
+		BDDMockito.given(service.getById(Mockito.anyLong())).willReturn(Optional.empty());
+		
+		// Envia o json atualizado
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.put(BOOK_API.concat("/"+11))
+				.contentType(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_ATOM_XML.APPLICATION_JSON)
+				.content(json);
+		
+		// Retorno sao os dados de updatedBook
+		mvc
+			.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isNotFound());
+	}
+	
 	private BookDTO createNewBook() {
-		return BookDTO.builder().author("Artur").title("As aventuras").isbn("001").build();
+		return BookDTO.builder().id(11L).author("Artur").title("As aventuras").isbn("001").build();
 	}
 }

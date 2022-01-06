@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -77,7 +78,27 @@ public class BookController {
 				.map(book -> {
 					this.service.delete(book);
 					return ResponseEntity.noContent().build();
-				}).orElse( ResponseEntity.notFound().build() );
+				}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+	}
+	
+	@PutMapping("{id}")
+	@Transactional
+	public ResponseEntity<BookDTO> update(@PathVariable Long id, @RequestBody @Valid BookDTO dto) {
+		
+		return this.service.getById(id)
+				.map(linha -> {
+					
+					Book book = linha;
+					book.setTitle(dto.getTitle());
+					book.setAuthor(dto.getAuthor());
+					
+					// Passando de dto para book
+					Book bookSave = this.service.update(book);
+					
+					// Passando de "bookSave" para "BookDTO"
+					BookDTO bookDto = this.mapper.map(bookSave, BookDTO.class);
+					return ResponseEntity.ok().body(bookDto);
+				}).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 	}
 	
 	// Erro de validacao
